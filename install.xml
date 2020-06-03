@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<modification>
+ <name>beardedcode_extended_status</name>
+ <code>beardedcode_extended_status</code>
+ <version>1.0</version>
+ <author>BeardedCode</author>
+ <link>https://opencartforum.com/profile/689478-pimur/</link>
+ <file path="catalog/model/catalog/product.php">
+  <operation>
+   <search error="abort"><![CDATA[
+        'stock_status'     => $query->row['stock_status'],
+   	]]></search>
+   <add position="before"><![CDATA[
+   	'stock_status_id'  => $query->row['stock_status_id'],
+    ]]></add>
+  </operation>
+ </file>
+ <file path="catalog/controller/product/product.php">
+  <operation>
+   <search><![CDATA[
+			$this->load->model('tool/image');
+   	]]></search>
+   <add position="before"><![CDATA[
+   	if($this->config->get('extended_status_status') === '1') {
+        $data['extended_status'] = $this->load->controller('extension/module/extended_status', array(
+            'stock'           => &$data['stock'],
+            'quantity'        => $product_info['quantity'],
+            'stock_status_id' => $product_info['stock_status_id'],
+        ));
+    }
+   	]]></add>
+  </operation>
+ </file>
+</modification>
