@@ -1,6 +1,9 @@
 <?php
+$_['today']             = 'Сегодня';
+$_['tomorrow']          = 'Завтра';
 $_['from_day']          = '%s %s';
 $_['from_to_day']       = '%s-%s %s';
+$_['from_to_day_str']   = '%s или %s %s';
 $_['from_to_month']     = 'с %s %s по %s %s';
 $_['month_1']           = 'Января';
 $_['month_2']           = 'Февраля';

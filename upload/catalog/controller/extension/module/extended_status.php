@@ -10,18 +10,16 @@ class ControllerExtensionModuleExtendedStatus extends Controller {
         if( isset($data['stock_status_id'])
             && $this->config->get('extended_status_custom')
             && ( $custom_status = $this->config->get('extended_status_custom')[$data['stock_status_id']] ) ) {
-
             $data['stock'] = $custom_status['name'];
             $data['module_name'] = $this->config->get('extended_status_name') ? $this->config->get('extended_status_name') : '';
 
-            $current_day = (int)date('j');
+            $current_day = $not_changed_day = (int)date('j');
 
             if( $this->config->get('extended_status_time') && $this->compareTime(date('H:i'), $this->config->get('extended_status_time')) ) {
                 $current_day += 1;
             }
 
             $current_day = $this->checkDateToHolidays($current_day);
-
 
             $data['deliveries'] = array();
 
@@ -34,24 +32,46 @@ class ControllerExtensionModuleExtendedStatus extends Controller {
                     }
 
                     $day_from = $this->checkDateToHolidays(( $current_day + (int)$days[0] ));
+                    $day_from_diff = $day_from - $not_changed_day > 0 ? $day_from - $not_changed_day : 0;
 
-                    if( count($days) > 1 ) {
+                    $month_from = date('n', strtotime('+' . $day_from_diff . ' day'));
+
+                    if( count($days) > 1 && $days[1] > 0 ) {
                         $day_to = $this->checkDateToHolidays(( $day_from + (int)$days[1] ));
+                        $day_to_diff = $day_to - $day_from - $not_changed_day > 0 ? $day_to - $day_from - $not_changed_day : 0;
                     } else {
                         $day_to = 0;
+                        $day_to_diff = 0;
+                    }
+//                    $this->log->write([ $day_from, $not_changed_day, $day_from_diff, $day_to_diff ]);
+                    if( $day_from_diff === 0 ) {
+                        $day_from = $this->language->get('today');
+                        if( $day_to_diff === 1 ) {
+                            $day_to = $this->language->get('tomorrow');
+                        }
+                    } elseif( $day_from_diff === 1 ) {
+                        $day_from = $this->language->get('tomorrow');
+                        if( $day_to_diff === 1 ) {
+                            $day_to = 0;
+                        }
                     }
 
-                    $month_from = date('n', strtotime('+' . $day_from . ' day'));
+                    if( $day_to ) {
+                        $month_to = date('n', strtotime('+' . $day_to_diff . ' day'));
 
-                    if( $day_to > 0 ) {
-                        $month_to = date('n', strtotime('+' . $day_to . ' day'));
-                        if( $month_from === $month_to ) {
+                        if( $month_from === $month_to && is_numeric($day_to) ) {
                             $date = sprintf($this->language->get('from_to_day'), $day_from, $day_to, $this->language->get('month_' . $month_from));
+                        } elseif( $month_from === $month_to && is_string($day_to) ) {
+                            $date = sprintf($this->language->get('from_to_day_str'), $day_from, $this->language->get('month_' . $month_from), $day_to, $this->language->get('month_' . $month_to));
                         } else {
                             $date = sprintf($this->language->get('from_to_month'), $day_from, $this->language->get('month_' . $month_from), $day_to, $this->language->get('month_' . $month_to));
                         }
                     } else {
-                        $date = sprintf($this->language->get('from_day'), $day_from, $this->language->get('month_' . $month_from));
+                        if(is_string($day_from)) {
+                            $date = $day_from;
+                        } else {
+                            $date = sprintf($this->language->get('from_day'), $day_from, $this->language->get('month_' . $month_from));
+                        }
                     }
                 } else {
                     $date = false;
